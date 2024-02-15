@@ -11,10 +11,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PedidoDTO implements Serializable {
 
-    private String numeroPedido;
+    private Long numeroPedido;
     private String cliente;
     private String endereco;
     private String complementoEndereco;
+    private String contato;
     private List<ProdutoDTO> produtos = new ArrayList<>();
     private Double precoTotal;
 

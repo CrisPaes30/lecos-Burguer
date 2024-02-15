@@ -1,6 +1,5 @@
 package com.cristian.producerHambuguer.utils;
 
-import com.cristian.producerHambuguer.controller.Impl.Pedidos;
 import com.cristian.producerHambuguer.dto.PedidoDTO;
 import com.cristian.producerHambuguer.dto.ProdutoDTO;
 import com.cristian.producerHambuguer.entities.Clientes;
@@ -15,6 +14,7 @@ public class PedidosMapperImpl implements PedidosMapper {
 
         Clientes clientes = new Clientes();
         clientes.setNumeroPedido(pedidoDTO.getNumeroPedido());
+        clientes.setContato(pedidoDTO.getContato());
         clientes.setEndereco(pedidoDTO.getEndereco());
         clientes.setComplemento(pedidoDTO.getComplementoEndereco());
         clientes.setNomeCliente(pedidoDTO.getCliente());
