@@ -3,6 +3,7 @@ package com.cristian.producerHambuguer.entities;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 
 @Data
 @Entity
@@ -17,4 +18,12 @@ public class StatusPedido {
     private String numeroPedido;
     @Column(name = "status")
     private String status;
+    @Column(name = "data")
+    private LocalDate date;
+    @Column(name = "tempo_novos_pedidos")
+    private String tempoNovosPedidos;
+    @Column(name = "tempo_Em_Andamento")
+    private String tempoEmAndamento;
+    @Column(name = "tempo_total")
+    private String tempoTotal;
 }

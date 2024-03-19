@@ -9,11 +9,17 @@ import javax.persistence.*;
 public class PedidosStatus {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequence_generator")
-//    @SequenceGenerator(name = "sequence_generator", sequenceName = "status_sequency", allocationSize = 1)
     private Long id;
     @Column(name = "numero_pedido")
-    private String numeroPedido;
+    private Long numeroPedido;
     @Column(name = "status")
     private String status;
+    @Column(name = "data")
+    private String data;
+    @Column(name = "tempo_novos_pedidos")
+    private String tempoNovosPedidos;
+    @Column(name = "tempo_Em_Andamento")
+    private String tempoEmAndamento;
+    @Column(name = "tempo_total")
+    private String tempoTotal;
 }

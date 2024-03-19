@@ -1,4 +1,4 @@
-package com.cristian.frontCozinha.entitites;
+package com.cristian.frontcozinha.entitites;
 
 import lombok.Data;
 
@@ -10,18 +10,13 @@ import javax.persistence.*;
 public class Pedidos {
 
     @Id
-    @Column(name = "ID")
+//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequence_generator")
+//    @SequenceGenerator(name = "sequence_generator", sequenceName = "produto_sequency", allocationSize = 1)
     private Long id;
-    @Column(name = "NUMERO_PEDIDO")
     private Long numeroPedido;
-    @Column(name = "NOME_PRODUTO")
     private String nomeProduto;
-    @Column(name = "COMPLEMENTO_LANCHE")
     private String complementoLanche;
-    @Column(name = "OBSERVACOES")
     private String observacao;
-    @Column(name = "PRECO_UNITARIO")
     private Double precoUnitario;
-    @Column(name = "PRECO_TOTAL")
     private Double precoTotal;
 }

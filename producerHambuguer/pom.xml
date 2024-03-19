@@ -15,7 +15,7 @@
 	<name>producerHambuguer</name>
 	<description>Projeto Hamburgueria</description>
 	<properties>
-		<java.version>17</java.version>
+		<java.version>17.0.10</java.version>
 	</properties>
 	<dependencies>
 		<dependency>

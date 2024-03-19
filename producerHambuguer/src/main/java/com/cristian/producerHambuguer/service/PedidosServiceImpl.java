@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,9 +68,21 @@ public class PedidosServiceImpl implements PedidosServices {
             StatusPedido statusPedido = new StatusPedido();
             statusPedido.setNumeroPedido(numeroPedido.toString());
             statusPedido.setStatus(STATUS_PENDENTE);
+
+            // Obtém a data atual
+            LocalDate dataAtual = LocalDate.now();
+
+            // Define a data atual no status do pedido
+            statusPedido.setDate(dataAtual);
+
+            // Salva o status do pedido
             statusRepository.save(statusPedido);
+
+            log.info("Status do pedido com número " + numeroPedido + " salvo com sucesso.");
         } catch (Exception e) {
             log.error("Não foi possível salvar o status pedido!", e);
         }
     }
+
+
 }
