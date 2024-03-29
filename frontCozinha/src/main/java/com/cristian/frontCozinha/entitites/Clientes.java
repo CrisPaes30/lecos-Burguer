@@ -23,4 +23,10 @@ public class Clientes {
     private String endereco;
     @Column(name = "COMPLEMENTO")
     private String complemento;
+    @Column(name = "BAIRRO")
+    private String bairro;
+    @Column(name = "REFERENCIA")
+    private String referencia;
+    @Column(name = "CIDADE")
+    private String cidade;
 }

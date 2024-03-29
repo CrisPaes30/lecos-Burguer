@@ -11,13 +11,10 @@ import com.cristian.producerHambuguer.repository.StatusRepository;
 import com.cristian.producerHambuguer.utils.PedidosMapperImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +25,6 @@ public class PedidosServiceImpl implements PedidosServices {
 
     private final String STATUS_PENDENTE = "PENDENTE";
 
-    private final KafkaTemplate<String, Serializable> kafkaTemplate;
     private final PedidosMapperImpl pedidosMapperImpl;
     private final PedidosRepository pedidosRepository;
     private final ProdutosRepository produtosRepository;
@@ -36,29 +32,33 @@ public class PedidosServiceImpl implements PedidosServices {
 
     @Transactional
     @Override
-    public void pedidosService(PedidoDTO pedidoDTO) {
+    public Long pedidosService(PedidoDTO pedidoDTO) {
+
+        Long numeroPedido = null;
+
         try {
             log.info("Salvando cliente e pedido");
 
-            Clientes cliente = pedidosMapperImpl.pedidoDtoToClientes(pedidoDTO);
+            numeroPedido = validaNumeroPedido();
+
+            Clientes cliente = pedidosMapperImpl.pedidoDtoToClientes(pedidoDTO, numeroPedido);
             pedidosRepository.save(cliente);
 
             List<Produtos> produtosList = new ArrayList<>();
             for (ProdutoDTO produtoDTO : pedidoDTO.getProdutos()) {
-                Produtos produto = pedidosMapperImpl.produtoDtoToProdutos(produtoDTO, pedidoDTO);
+                Produtos produto = pedidosMapperImpl.produtoDtoToProdutos(produtoDTO, pedidoDTO, numeroPedido);
                 produtosList.add(produto);
             }
             produtosRepository.saveAll(produtosList);
 
-            salvarStatusPedido(pedidoDTO.getNumeroPedido());
+            salvarStatusPedido(numeroPedido);
 
-            log.info("Pedido com numero {}, salvo", pedidoDTO.getNumeroPedido());
-            log.info("Enviando pedido...");
-            kafkaTemplate.send("burguer-topic", pedidoDTO);
-            log.info("pedido enviado...");
+            log.info("Pedido com numero {}, salvo", numeroPedido);
         } catch (Exception e) {
             log.error("Erro ao salvar o cliente ou o pedido", e);
         }
+
+        return numeroPedido;
     }
 
     private void salvarStatusPedido(Long numeroPedido) {
@@ -66,7 +66,7 @@ public class PedidosServiceImpl implements PedidosServices {
             log.info("Salvando status pedido");
 
             StatusPedido statusPedido = new StatusPedido();
-            statusPedido.setNumeroPedido(numeroPedido.toString());
+            statusPedido.setNumeroPedido(numeroPedido);
             statusPedido.setStatus(STATUS_PENDENTE);
 
             // Obtém a data atual
@@ -82,6 +82,19 @@ public class PedidosServiceImpl implements PedidosServices {
         } catch (Exception e) {
             log.error("Não foi possível salvar o status pedido!", e);
         }
+    }
+
+    public Long validaNumeroPedido() {
+
+        Long produtos = produtosRepository.findMaxNumeroPedido();
+
+        if (produtos == null) {
+            produtos = 1L ;
+        } else {
+            produtos ++;
+        }
+
+        return produtos;
     }
 
 

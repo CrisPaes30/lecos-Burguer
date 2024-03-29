@@ -4,5 +4,5 @@ import com.cristian.producerHambuguer.dto.PedidoDTO;
 
 public interface PedidosServices {
 
-    void pedidosService(PedidoDTO pedidoDTO);
+    Long pedidosService(PedidoDTO pedidoDTO);
 }

@@ -19,4 +19,6 @@ public class Produtos {
     private String observacao;
     private Double precoUnitario;
     private Double precoTotal;
+    private Double taxaEntrega;
+    private String formaPagamento;
 }

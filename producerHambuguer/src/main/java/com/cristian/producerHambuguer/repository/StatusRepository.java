@@ -13,10 +13,4 @@ import javax.transaction.Transactional;
 @Repository
 public interface StatusRepository extends JpaRepository<StatusPedido, Long> {
 
-    @Transactional
-    @Modifying
-    @Query(value = "INSERT INTO status_pedido (id, numero_pedido, status) VALUES (status_sequency.nextval, :numeroPedido, :status)", nativeQuery = true)
-    void saveStatusPedido(@Param("numeroPedido") Long numeroPedido,
-                          @Param("status") String status);
-
 }

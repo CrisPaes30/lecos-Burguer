@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface Pedidos {
 
     @PostMapping
-    ResponseEntity<PedidoDTO> pedidos(@RequestBody PedidoDTO pedidoDTO);
+    ResponseEntity<String> pedidos(@RequestBody PedidoDTO pedidoDTO);
 }

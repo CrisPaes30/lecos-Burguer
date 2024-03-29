@@ -15,8 +15,13 @@ public class PedidoDTO implements Serializable {
     private String cliente;
     private String endereco;
     private String complementoEndereco;
+    private String cidade;
+    private String bairro;
+    private String referencia;
     private String contato;
     private List<ProdutoDTO> produtos = new ArrayList<>();
     private Double precoTotal;
+    private Double taxaEntrega;
+    private String formaPagamento;
 
 }

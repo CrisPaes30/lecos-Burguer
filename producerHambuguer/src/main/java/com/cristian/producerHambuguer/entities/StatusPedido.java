@@ -15,7 +15,7 @@ public class StatusPedido {
     @SequenceGenerator(name = "sequence_generator", sequenceName = "status_sequency", allocationSize = 1)
     private Long id;
     @Column(name = "numero_pedido")
-    private String numeroPedido;
+    private Long numeroPedido;
     @Column(name = "status")
     private String status;
     @Column(name = "data")

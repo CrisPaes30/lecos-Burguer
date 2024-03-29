@@ -1,7 +1,7 @@
 package com.cristian.frontCozinha.services;
 
 import com.cristian.frontCozinha.entitites.Clientes;
-import com.cristian.frontCozinha.entitites.Pedidos;
+import com.cristian.frontCozinha.entitites.Produtos;
 import com.cristian.frontCozinha.entitites.PedidosStatus;
 import com.cristian.frontCozinha.repository.ClienteRepository;
 import com.cristian.frontCozinha.repository.PedidoRepository;
@@ -23,47 +23,34 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
 
-    public List<Pedidos> processarPedidosPendentes() {
+    public List<Produtos> processarPedidosPendentes() throws NullPointerException {
         log.info("Processando pedidos pendentes");
 
-        List<Pedidos> pedidosPendentes = new ArrayList<>();
+        List<Produtos> produtosPendentes = new ArrayList<>();
 
-        try {
+
             List<PedidosStatus> pedidosPendentesStatus = statusRepository.findByStatus("PENDENTE");
 
             for (PedidosStatus pedidosStatus : pedidosPendentesStatus) {
                 Long numeroPedido = pedidosStatus.getNumeroPedido();
 
-                List<Pedidos> pedidos = pedidoRepository.findByNumeroPedido(numeroPedido);
+                List<Produtos> pedidos = pedidoRepository.findByNumeroPedido(numeroPedido);
 
-                StringBuilder nomeProdutos = new StringBuilder();
-                StringBuilder complementoPedidos = new StringBuilder();
+                for (Produtos pedido : pedidos) {
+                    Produtos novoPedido = new Produtos();
 
-                for (int i = 0; i < pedidos.size(); i++) {
-                    Pedidos pedido = pedidos.get(i);
+                    novoPedido.setNumeroPedido(pedido.getNumeroPedido());
+                    novoPedido.setNomeProduto(pedido.getNomeProduto());
+                    novoPedido.setComplementoLanche(pedido.getComplementoLanche());
+                    novoPedido.setObservacao(pedido.getObservacao());
 
-                    if (i > 0) {
-                        nomeProdutos.append(" / "); // Adiciona a barra entre os produtos
-                        complementoPedidos.append(" / "); // Adiciona a barra entre os complementos
-                    }
-
-                    nomeProdutos.append(pedido.getNomeProduto());
-                    complementoPedidos.append(pedido.getComplementoLanche());
+                    produtosPendentes.add(novoPedido);
                 }
-
-                Pedidos novoPedido = new Pedidos();
-                novoPedido.setNumeroPedido(numeroPedido);
-                novoPedido.setNomeProduto(nomeProdutos.toString());
-                novoPedido.setComplementoLanche(complementoPedidos.toString());
-                pedidosPendentes.add(novoPedido);
             }
 
-        } catch (Exception e) {
-            log.error("Erro ao processar pedidos pendentes: {}", e.getMessage());
-        }
-
-        return pedidosPendentes;
+        return produtosPendentes;
     }
+
 
     public Clientes dadosClientes(Long numeroPedido) {
         log.info("Buscando dados do cliente");
@@ -78,10 +65,10 @@ public class PedidoService {
         return clientes;
     }
 
-    public List<Pedidos> buscaPedidosEmAndamento() {
+    public List<Produtos> buscaPedidosEmAndamento() {
         log.info("Buscando Pedidos Em Andamento");
 
-        List<Pedidos> pedidosEmAndamento = new ArrayList<>();
+        List<Produtos> produtosEmAndamento = new ArrayList<>();
 
         try {
             List<PedidosStatus> andamento = statusRepository.findByStatus("EM ANDAMENTO");
@@ -89,40 +76,31 @@ public class PedidoService {
             for (PedidosStatus pedidosStatus : andamento) {
                 Long numeroPedido = pedidosStatus.getNumeroPedido();
 
-                List<Pedidos> pedidos = pedidoRepository.findByNumeroPedido(numeroPedido);
+                List<Produtos> pedidos = pedidoRepository.findByNumeroPedido(numeroPedido);
 
-                StringBuilder nomeProdutos = new StringBuilder();
-                StringBuilder complementoPedidos = new StringBuilder();
+                for (Produtos pedido : pedidos) {
 
-                for (int i = 0; i < pedidos.size(); i++) {
-                    Pedidos pedido = pedidos.get(i);
+                    Produtos novoPedido = new Produtos();
 
-                    if (i > 0) {
-                        nomeProdutos.append(" / "); // Adiciona a barra entre os produtos
-                        complementoPedidos.append(" / "); // Adiciona a barra entre os complementos
-                    }
+                    novoPedido.setNumeroPedido(pedido.getNumeroPedido());
+                    novoPedido.setNomeProduto(pedido.getNomeProduto());
+                    novoPedido.setComplementoLanche(pedido.getComplementoLanche());
+                    novoPedido.setObservacao(pedido.getObservacao());
 
-                    nomeProdutos.append(pedido.getNomeProduto());
-                    complementoPedidos.append(pedido.getComplementoLanche());
+                    produtosEmAndamento.add(novoPedido);
                 }
-
-                Pedidos novoPedido = new Pedidos();
-                novoPedido.setNumeroPedido(numeroPedido);
-                novoPedido.setNomeProduto(nomeProdutos.toString());
-                novoPedido.setComplementoLanche(complementoPedidos.toString());
-                pedidosEmAndamento.add(novoPedido);
             }
         } catch (Exception e) {
             log.error("Não foi possivel buscar pedidos em andamento");
         }
 
-        return pedidosEmAndamento;
+        return produtosEmAndamento;
     }
 
-    public List<Pedidos> buscaPedidosFinalizadosDoDia() {
+    public List<Produtos> buscaPedidosFinalizadosDoDia() {
         log.info("Buscando Pedidos Finalizados do Dia");
 
-        List<Pedidos> pedidosFinalizados = new ArrayList<>();
+        List<Produtos> produtosFinalizados = new ArrayList<>();
 
         LocalDate date = LocalDate.now();
 
@@ -132,34 +110,26 @@ public class PedidoService {
             for (PedidosStatus pedidosStatus : finalizados) {
                 Long numeroPedido = pedidosStatus.getNumeroPedido();
 
-                List<Pedidos> pedidos = pedidoRepository.findByNumeroPedido(numeroPedido);
+                List<Produtos> pedidos = pedidoRepository.findByNumeroPedido(numeroPedido);
 
-                StringBuilder nomeProdutos = new StringBuilder();
-                StringBuilder complementoPedidos = new StringBuilder();
+                for (Produtos pedido : pedidos) {
 
-                for (int i = 0; i < pedidos.size(); i++) {
-                    Pedidos pedido = pedidos.get(i);
+                    Produtos novoPedido = new Produtos();
 
-                    if (i > 0) {
-                        nomeProdutos.append(" / "); // Adiciona a barra entre os produtos
-                        complementoPedidos.append(" / "); // Adiciona a barra entre os complementos
-                    }
-
-                    nomeProdutos.append(pedido.getNomeProduto());
-                    complementoPedidos.append(pedido.getComplementoLanche());
+                    novoPedido.setNumeroPedido(pedido.getNumeroPedido());
+                    novoPedido.setNomeProduto(pedido.getNomeProduto());
+                    novoPedido.setComplementoLanche(pedido.getComplementoLanche());
+                    novoPedido.setObservacao(pedido.getObservacao());
+                    novoPedido.setPrecoTotal(pedido.getPrecoTotal());
+                    novoPedido.setPrecoUnitario(pedido.getPrecoUnitario());
+                    produtosFinalizados.add(novoPedido);
                 }
-
-                Pedidos novoPedido = new Pedidos();
-                novoPedido.setNumeroPedido(numeroPedido);
-                novoPedido.setNomeProduto(nomeProdutos.toString());
-                novoPedido.setComplementoLanche(complementoPedidos.toString());
-                pedidosFinalizados.add(novoPedido);
             }
         } catch (RuntimeException e) {
             log.error("Não foi possivel buscar pedidos finalizados do dia");
         }
 
-        return pedidosFinalizados;
+        return produtosFinalizados;
     }
 
     public void atualizaStatus(Long numeroPedido, String status) {
@@ -192,14 +162,14 @@ public class PedidoService {
         }
     }
 
-    public Pedidos searchPedido(Long numero) {
+    public Produtos searchPedido(Long numero) {
 
         log.info("*******Procurando Pedido pelo numero: " + numero + "******");
 
-        Pedidos pedidos = new Pedidos();
+        Produtos produtos = new Produtos();
 
         try {
-            List<Pedidos> listaPedidos = pedidoRepository.findByNumeroPedido(numero);
+            List<Produtos> listaPedidos = pedidoRepository.findByNumeroPedido(numero);
 
             if (!listaPedidos.isEmpty()) {
                 // Inicializa StringBuilders para nomeProduto e complementoLanche
@@ -207,7 +177,7 @@ public class PedidoService {
                 StringBuilder complementoPedidos = new StringBuilder();
 
                 // Itera sobre a lista de pedidos encontrados
-                for (Pedidos pedido : listaPedidos) {
+                for (Produtos pedido : listaPedidos) {
                     // Verifica se é o primeiro pedido
                     if (nomeProdutos.length() > 0) {
                         nomeProdutos.append(" / ");
@@ -219,14 +189,14 @@ public class PedidoService {
                     complementoPedidos.append(pedido.getComplementoLanche());
 
                     // Define outros atributos do pedido
-                    pedidos.setNumeroPedido(pedido.getNumeroPedido());
-                    pedidos.setPrecoTotal(pedido.getPrecoTotal());
-                    pedidos.setObservacao(pedido.getObservacao());
+                    produtos.setNumeroPedido(pedido.getNumeroPedido());
+                    produtos.setPrecoTotal(pedido.getPrecoTotal());
+                    produtos.setObservacao(pedido.getObservacao());
                 }
 
                 // Define os valores dos StringBuilders no pedido
-                pedidos.setNomeProduto(nomeProdutos.toString());
-                pedidos.setComplementoLanche(complementoPedidos.toString());
+                produtos.setNomeProduto(nomeProdutos.toString());
+                produtos.setComplementoLanche(complementoPedidos.toString());
             } else {
                 log.info("Nenhum pedido encontrado com o número: " + numero);
             }
@@ -234,7 +204,7 @@ public class PedidoService {
             log.error("Erro ao procurar o pedido: " + e.getMessage());
         }
 
-        return pedidos;
+        return produtos;
     }
 
 
@@ -286,7 +256,7 @@ public class PedidoService {
 
         } catch (RuntimeException e) {
             log.error("Não foi possível buscar o tempo do pedido");
-            return ""; // Retorna uma string vazia se ocorrer uma exceção
+            return "";
         }
     }
     private String salvaTempoTotal(Long numero, String tempoTotal) {
@@ -298,4 +268,15 @@ public class PedidoService {
             return "";
         }
     }
+
+    public String removeCaracteres(String numero) {
+
+        if (numero != null) {
+            return numero.replaceAll("[^0-9]", "");
+        } else {
+            return null;
+        }
+
+    }
+
 }

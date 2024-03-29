@@ -7,7 +7,7 @@ import javax.persistence.*;
 @Data
 @Entity
 @Table(name = "produtos")
-public class Pedidos {
+public class Produtos {
 
     @Id
     @Column(name = "ID")
@@ -24,4 +24,8 @@ public class Pedidos {
     private Double precoUnitario;
     @Column(name = "PRECO_TOTAL")
     private Double precoTotal;
+    @Column(name = "TAXA_ENTREGA")
+    private Double taxaEntrega;
+    @Column(name = "FORMA_PAGAMENTO")
+    private String formaPagamento;
 }

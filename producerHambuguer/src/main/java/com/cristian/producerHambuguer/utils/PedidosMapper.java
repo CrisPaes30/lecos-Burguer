@@ -9,7 +9,7 @@ import org.mapstruct.Mapper;
 @Mapper
 public interface PedidosMapper {
 
-    Clientes pedidoDtoToClientes(PedidoDTO pedidoDTO);
+    Clientes pedidoDtoToClientes(PedidoDTO pedidoDTO, Long numeroPedido);
 
-    Produtos produtoDtoToProdutos(ProdutoDTO produtoDTO, PedidoDTO pedidoDTO);
+    Produtos produtoDtoToProdutos(ProdutoDTO produtoDTO, PedidoDTO pedidoDTO, Long numeroPedido);
 }

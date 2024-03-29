@@ -1,7 +1,8 @@
 package com.cristian.frontCozinha.tela;
 
+import com.cristian.frontCozinha.cupom.ImpressaoCupom;
 import com.cristian.frontCozinha.entitites.Clientes;
-import com.cristian.frontCozinha.entitites.Pedidos;
+import com.cristian.frontCozinha.entitites.Produtos;
 import com.cristian.frontCozinha.repository.StatusRepository;
 import com.cristian.frontCozinha.services.PedidoService;
 import javafx.animation.KeyFrame;
@@ -22,6 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +38,8 @@ public class TelaGerenciamento extends Application {
     private PedidoService pedidoService;
     @Autowired
     private StatusRepository statusRepository;
+    @Autowired
+    private ImpressaoCupom impressaoCupom;
     private VBox colunaNovosPedidos;
     private VBox colunaEmAndamento; // Coluna "Em Andamento"
     private VBox colunaFinalizados; // Coluna "Finalizados"
@@ -82,8 +88,8 @@ public class TelaGerenciamento extends Application {
                     }
 
                     Long numeroPedido = Long.parseLong(textoPedido);
-                    Pedidos pedidos = pedidoService.searchPedido(numeroPedido);
-                    retornaBuscaPedidos(colunaPedidoEncontrado, String.valueOf(pedidos.getNumeroPedido()));
+                    Produtos produtos = pedidoService.searchPedido(numeroPedido);
+                    retornaBuscaPedidos(colunaPedidoEncontrado, String.valueOf(produtos.getNumeroPedido()));
 
                     searchField.clear();
                 }
@@ -151,12 +157,16 @@ public class TelaGerenciamento extends Application {
         private Timeline timeline;
         private Label tempoDecorridoLabel;
         private int segundos;
+        private boolean collapsed = false;
+        private final VBox content;
 
-        public OrderCard(VBox parentColumn, String numero, String lanche, String complemento,
-                         String observacao, String endereco, String tempoTotal) {
+        public OrderCard(VBox parentColumn, String numero, String corpo, String lanche,
+                         String complemento, String observacao, String endereco, String tempoTotal) {
             this.parentColumn = parentColumn;
             this.numeroPedido = numero;
             this.segundos = 0;
+            this.content = new VBox();
+
 
             setPadding(new Insets(10));
             setSpacing(5);
@@ -164,19 +174,17 @@ public class TelaGerenciamento extends Application {
             setStyle("-fx-background-color: white; -fx-background-radius: 10px;");
 
             Label numeroPedidoLabel = new Label(numero);
-            Label lanchePedido = new Label(lanche);
-            Label complementoLanche = new Label(complemento);
-            Label observacaoPedido = new Label(observacao);
-            Label enderecoEndereco = new Label(endereco);
+            Label corpoLabel = new Label(corpo);
+            corpoLabel.setPadding(new Insets(0, 10, 0, 0)); // Ajuste o padding aqui conforme necessário
             Label tempoTotalLabel = new Label(tempoTotal);
 
             HBox numeroEtempoBox = new HBox();
             numeroEtempoBox.getChildren().addAll(numeroPedidoLabel);
-            numeroEtempoBox.setAlignment(Pos.CENTER_LEFT);
+            numeroEtempoBox.setAlignment(Pos.CENTER_RIGHT);
             numeroEtempoBox.setSpacing(200);
-            numeroEtempoBox.setPadding(new Insets(0, 10, 0, 0));
+            numeroEtempoBox.setPadding(new Insets(-30, 10, 0, 0));
 
-            getChildren().addAll(numeroEtempoBox, lanchePedido, complementoLanche, observacaoPedido, enderecoEndereco, tempoTotalLabel);
+            getChildren().addAll(numeroPedidoLabel, numeroEtempoBox, corpoLabel, tempoTotalLabel);
 
             // Adiciona o botão apenas se necessário
             if (!parentColumn.equals(colunaFinalizados)) {
@@ -212,9 +220,41 @@ public class TelaGerenciamento extends Application {
                         pedidoService.salvarTempoRelogioNovosPedidos(numeroPedido, tPedidos);
                     });
                 }
-
                 getChildren().add(moveButton);
+            } else if (parentColumn.equals(colunaFinalizados)) {
+                Button printButton = new Button("Imprimir Cupom/WhatsApp");
+                printButton.setOnAction(event -> {
+                    String s = extrairNumeroPedido(numero);
+                    impressaoCupom.geraCupomFiscal(s); // Chama o método para imprimir o cupom no card correspondente
+                    Clientes clientes = pedidoService.dadosClientes(Long.valueOf(s));
+
+                    String contato = pedidoService.removeCaracteres(clientes.getContato());
+                    if (contato != null) {
+                        // Número para o qual você deseja enviar mensagem via WhatsApp
+                        String numeroWhatsApp = "+55" + contato;
+
+                        // Formato da URL do WhatsApp para iniciar uma conversa
+                        String urlWhatsApp = "https://wa.me/" + numeroWhatsApp;
+
+                        // Abre a URL do WhatsApp no navegador padrão
+                        String chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+                        URL uri = null;
+                        try {
+                            uri = new URL(urlWhatsApp);
+                            String command = chromePath + " " + uri;
+                            Runtime.getRuntime().exec(command);
+                        } catch (MalformedURLException e) {
+                            throw new RuntimeException(e);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        log.info("Contato vazio");
+                    }
+                });
+                getChildren().add(printButton);
             }
+
             // Se não for a coluna "Finalizados", iniciamos o timer e definimos o tempoDecorridoLabel
             if (!parentColumn.equals(colunaFinalizados)) {
                 iniciarTimer();
@@ -236,14 +276,6 @@ public class TelaGerenciamento extends Application {
 
         public String getNumeroPedido() {
             return numeroPedido;
-        }
-
-        public void cancelTimer() {
-            timeline.stop();
-        }
-
-        public void pauseTimer() {
-            timeline.pause();
         }
 
         private String atualizarTempoDecorrido() {
@@ -289,22 +321,14 @@ public class TelaGerenciamento extends Application {
         switch (title) {
             case EM_ANDAMENTO -> {
                 colunaEmAndamento = column;
-                List<Pedidos> emAndamento = pedidoService.buscaPedidosEmAndamento();
-                for (Pedidos pedido : emAndamento) {
-                    String observacao = "";
-                    if (pedido.getObservacao() != null) {
-                        observacao = pedido.getObservacao();
-                    }
+                List<Produtos> emAndamento = pedidoService.buscaPedidosEmAndamento();
+                for (Produtos pedido : emAndamento) {
                     // Verificar se o pedido já está sendo exibido em algum outro lugar
                     boolean pedidoJaExibido = pedidoJaExibido(pedido, colunaEmAndamento);
                     if (!pedidoJaExibido) {
-                        adicionarPedido(column, // Passando a referência do VBox correspondente
-                                "Pedido: " + pedido.getNumeroPedido(),
-                                "Lanche: " + pedido.getNomeProduto(),
-                                "Complemento: " + pedido.getComplementoLanche(),
-                                "Observação: " + observacao,
-                                "Endereço: " + pedidoService.dadosClientes(pedido.getNumeroPedido()).getEndereco(),
-                                null);
+                        adicionarPedido(column, "Pedido: " + pedido.getNumeroPedido(),
+                                null, null, null,
+                                null, null);
                     }
                 }
             }
@@ -314,23 +338,15 @@ public class TelaGerenciamento extends Application {
                         // Recuperar pedidos pendentes apenas uma vez
                         Platform.runLater(() -> {
                             // Recuperar pedidos pendentes apenas uma vez
-                            List<Pedidos> pedidosPendentes = pedidoService.processarPedidosPendentes();
+                            List<Produtos> produtosPendentes = pedidoService.processarPedidosPendentes();
 
-                            for (Pedidos pedido : pedidosPendentes) {
+                            for (Produtos pedido : produtosPendentes) {
                                 // Verificar se o pedido já está sendo exibido em algum outro lugar
                                 boolean pedidoJaExibido = pedidoJaExibido(pedido, colunaNovosPedidos);
-                                String observacao = "";
-                                if (pedido.getObservacao() != null) {
-                                    observacao = pedido.getObservacao();
-                                }
                                 if (!pedidoJaExibido) {
-                                    adicionarPedido(column, // Passando a referência do VBox correspondente
-                                            "Pedido: " + pedido.getNumeroPedido(),
-                                            "Lanche: " + pedido.getNomeProduto(),
-                                            "Complemento: " + pedido.getComplementoLanche(),
-                                            "Observação: " + observacao,
-                                            "Endereço: " + pedidoService.dadosClientes(pedido.getNumeroPedido()).getEndereco(),
-                                            null);
+                                    adicionarPedido(column, "Pedido: " + pedido.getNumeroPedido(),
+                                            null, null, null,
+                                            null, null);
                                 }
                             }
                         });
@@ -348,8 +364,8 @@ public class TelaGerenciamento extends Application {
             case FINALIZADOS -> {
                 colunaFinalizados = column;
                 // Recuperar pedidos finalizados
-                List<Pedidos> finalizadosDoDia = pedidoService.buscaPedidosFinalizadosDoDia();
-                for (Pedidos pedido : finalizadosDoDia) {
+                List<Produtos> finalizadosDoDia = pedidoService.buscaPedidosFinalizadosDoDia();
+                for (Produtos pedido : finalizadosDoDia) {
                     // Verificar se o pedido já está sendo exibido em algum outro lugar
                     boolean pedidoJaExibido = pedidoJaExibido(pedido, colunaFinalizados);
                     if (!pedidoJaExibido) {
@@ -357,6 +373,7 @@ public class TelaGerenciamento extends Application {
                         if (pedido.getObservacao() != null) {
                             observacao = pedido.getObservacao();
                         }
+                        // Adicionar o card do pedido
                         adicionarPedido(column, // Passando a referência do VBox correspondente
                                 "Pedido: " + pedido.getNumeroPedido(),
                                 "Lanche: " + pedido.getNomeProduto(),
@@ -375,13 +392,51 @@ public class TelaGerenciamento extends Application {
 
     private void adicionarPedido(VBox column, String numero, String lanche, String complemento,
                                  String observacao, String endereco, String tempoTotal) {
-        OrderCard orderCard = new OrderCard(column, numero, lanche, complemento, observacao, endereco, tempoTotal);
+        String corpo = construirConteudoPedidos(column);
+        OrderCard orderCard = new OrderCard(column, numero, corpo, lanche, complemento, observacao, endereco, tempoTotal);
         column.getChildren().add(orderCard);
+
     }
 
-    private boolean pedidoJaExibido(Pedidos pedido, VBox colunas) {
+    private String construirConteudoPedidos(VBox column) {
+        StringBuilder conteudo = new StringBuilder();
+
+        List<Produtos> retornaPedido = null;
+
+        if (column.equals(colunaEmAndamento)) {
+            retornaPedido = pedidoService.buscaPedidosEmAndamento();
+        } else if (column.equals(colunaNovosPedidos)) {
+            retornaPedido = pedidoService.processarPedidosPendentes();
+        } else if (column.equals(colunaFinalizados)) {
+            retornaPedido = pedidoService.buscaPedidosFinalizadosDoDia();
+        }
+
+        // Iterar sobre os pedidos e construir o conteúdo
+        for (int i = 0; i < retornaPedido.size(); i++) {
+            Produtos pedido = retornaPedido.get(i);
+
+            conteudo.append("Lanche: ").append(pedido.getNomeProduto()).append("\n")
+                    .append("Complemento: ").append(pedido.getComplementoLanche() != null ? pedido.getComplementoLanche() : "").append("\n")
+                    .append("Observação: ").append(pedido.getObservacao() != null ? pedido.getObservacao() : "").append("\n");
+
+            // Adicionar endereço apenas para o último pedido
+            if (i == retornaPedido.size() - 1) {
+                conteudo.append("Endereço: ").append(pedidoService.dadosClientes(pedido.getNumeroPedido()).getEndereco()).append("\n");
+            }
+
+            // Adicionar linha separadora se não for o último pedido
+            if (i < retornaPedido.size() - 1) {
+                conteudo.append("----------------------\n");
+            }
+        }
+
+        return conteudo.toString();
+    }
+
+
+    private boolean pedidoJaExibido(Produtos pedido, VBox colunas) {
         // Verificar se o pedido já está sendo exibido na coluna de Novos Pedidos
-        if (colunas.equals(colunaNovosPedidos) || colunas.equals(colunaEmAndamento)) {
+        if (colunas.equals(colunaNovosPedidos) || colunas.equals(colunaEmAndamento) || colunas.equals(colunaFinalizados)) {
             for (Node node : colunas.getChildren()) {
                 if (node instanceof OrderCard) {
                     OrderCard orderCard = (OrderCard) node;
@@ -483,7 +538,7 @@ public class TelaGerenciamento extends Application {
         return horizontalColumn;
     }
 
-    private void adiconaPedidoReader(HBox column, String nomeCliente, String numeroPedido, String lanche, String status) {
+    private void adicionaPedidoReader(HBox column, String nomeCliente, String numeroPedido, String lanche, String status) {
         SearchOrderCard searchOrderCard = new SearchOrderCard(nomeCliente, numeroPedido, lanche, status);
         column.getChildren().add(searchOrderCard);
     }
@@ -533,16 +588,16 @@ public class TelaGerenciamento extends Application {
 
     private void retornaBuscaPedidos(HBox column, String numero) {
 
-        if(!numero.equals("null")) {
+        if (!numero.equals("null")) {
             Clientes clientes = pedidoService.dadosClientes(Long.parseLong(numero));
             String status = pedidoService.buscaStatus(clientes.getNumeroPedido());
-            Pedidos pedidos = pedidoService.searchPedido(clientes.getNumeroPedido());
+            Produtos produtos = pedidoService.searchPedido(clientes.getNumeroPedido());
 
-            if (clientes != null && status != null && pedidos != null) {
-                adiconaPedidoReader(column,
+            if (clientes != null && status != null && produtos != null) {
+                adicionaPedidoReader(column,
                         "Nome: " + clientes.getNomeCliente(),
                         "Pedido: " + clientes.getNumeroPedido(),
-                        "Lanche: " + pedidos.getNomeProduto(),
+                        "Lanche: " + produtos.getNomeProduto(),
                         "Status: " + status);
             }
             // Adicionando um listener para remover a coluna "Pedido Encontrado" quando o botão "Fechar" for clicado
@@ -552,9 +607,9 @@ public class TelaGerenciamento extends Application {
                     searchOrderCard.setOnCloseAction(() -> column.getChildren().remove(searchOrderCard));
                 }
             }
-        }else {
-            adiconaPedidoReader(column,
-                    "Nome: " ,
+        } else {
+            adicionaPedidoReader(column,
+                    "Nome: ",
                     "Pedido: Não Encontrado",
                     "Lanche: ",
                     "Status: ");

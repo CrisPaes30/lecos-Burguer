@@ -19,4 +19,7 @@ public class Clientes {
     private String nomeCliente;
     private String endereco;
     private String complemento;
+    private String bairro;
+    private String referencia;
+    private String cidade;
 }

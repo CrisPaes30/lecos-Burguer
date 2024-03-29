@@ -18,9 +18,9 @@ public class PedidosControllerImpl implements Pedidos {
 
     private final PedidosServices pedidosServices;
 
-    public ResponseEntity<PedidoDTO> pedidos(@RequestBody PedidoDTO pedidos) {
-        pedidosServices.pedidosService(pedidos);
+    public ResponseEntity<String> pedidos(@RequestBody PedidoDTO pedidos) {
+        Long numeroPedido = pedidosServices.pedidosService(pedidos);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{numeroPedido}").buildAndExpand(pedidos.getNumeroPedido()).toUri();
-        return ResponseEntity.created(uri).body(pedidos);
+        return ResponseEntity.created(uri).body("Numero Pedido Criado: " + numeroPedido);
     }
 }

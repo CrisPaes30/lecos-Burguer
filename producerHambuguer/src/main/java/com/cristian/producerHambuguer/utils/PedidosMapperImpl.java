@@ -10,20 +10,23 @@ import org.springframework.stereotype.Component;
 public class PedidosMapperImpl implements PedidosMapper {
 
     @Override
-    public Clientes pedidoDtoToClientes(PedidoDTO pedidoDTO) {
+    public Clientes pedidoDtoToClientes(PedidoDTO pedidoDTO, Long numeroPedido) {
 
         Clientes clientes = new Clientes();
-        clientes.setNumeroPedido(pedidoDTO.getNumeroPedido());
+        clientes.setNumeroPedido(numeroPedido);
         clientes.setContato(pedidoDTO.getContato());
         clientes.setEndereco(pedidoDTO.getEndereco());
         clientes.setComplemento(pedidoDTO.getComplementoEndereco());
+        clientes.setBairro(pedidoDTO.getBairro());
+        clientes.setCidade(pedidoDTO.getCidade());
+        clientes.setReferencia(pedidoDTO.getReferencia());
         clientes.setNomeCliente(pedidoDTO.getCliente());
 
         return clientes;
     }
 
     @Override
-    public Produtos produtoDtoToProdutos(ProdutoDTO produtoDTO, PedidoDTO pedidoDTO) {
+    public Produtos produtoDtoToProdutos(ProdutoDTO produtoDTO, PedidoDTO pedidoDTO, Long numeroPedido) {
 
         Produtos produtos = new Produtos();
         produtos.setNomeProduto(produtoDTO.getNomeProduto());
@@ -31,7 +34,9 @@ public class PedidosMapperImpl implements PedidosMapper {
         produtos.setObservacao(produtoDTO.getObservacao());
         produtos.setPrecoUnitario(produtoDTO.getPrecoUnitario());
         produtos.setPrecoTotal(pedidoDTO.getPrecoTotal());
-        produtos.setNumeroPedido(pedidoDTO.getNumeroPedido());
+        produtos.setNumeroPedido(numeroPedido);
+        produtos.setTaxaEntrega(pedidoDTO.getTaxaEntrega());
+        produtos.setFormaPagamento(pedidoDTO.getFormaPagamento());
 
         return produtos;
     }
